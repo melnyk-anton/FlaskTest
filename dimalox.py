@@ -1,1 +1,1 @@
-print("BODIA LOX !!!")
+print("DIMA LOX !!!")

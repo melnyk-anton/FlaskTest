@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import psycopg2
+from random import randint
+import json
 
 app = Flask(__name__)
 
@@ -36,11 +38,10 @@ INSERT_STUDENT = (
         registered,
         year
     )
-    VALUES (%s, %s, %s, %s, %s, %s);
+    VALUES (%s, %s, %s, %s, now() at time zone 'EETDST', %s);
     """
 )
 
-# select empno,ename,hiredate from emp order by hiredate asc;
 # asc - ascending (reverse = False)
 # desc - descending (reverse = True)
 
@@ -49,27 +50,65 @@ GET_ALL_STUDENTS = (
     SELECT
     first_name, last_name, email, unique_code, registered, year
     from students
-    by year %s;
+    %s
+    %s;
     """
-) # %s - asceding or descending
+)
+# first %s - where year = x
+# second %s - 'order by year' + asceding or descending
 
 @app.post('/api/student')
 def create_user():
     data = request.get_json()
+    # SELECT now() AT TIME ZONE 'Europe/Paris';
+    # timezone - 'EETDST'
+    if not ('first_name' in data and 'last_name' in data and 'email' in data and 'year' in data):
+        return 'Request should contain at least 4 arguments:\n"first_name" ; "last_name" ; "email" ; "year"', 400
 
     with connection:
         with connection.cursor() as cursor:
             cursor.execute(CREATE_STUDENTS_TABLE)
+            cursor.execute(INSERT_STUDENT, (data['first_name'], data['last_name'], data['email'], generate_unique_code(), data['year'])) # without current_time
     
     return "Its ok BRO", 201
+
+def generate_unique_code():
+    len_ = 10
+    s = ''
+    for i in range(len_):
+        s += str(randint(0, 9))
+    
+    return s
 
 @app.get('/api/student')
 def get_all_users():
     # args:
-    # sorting - True/False
-    # reverse - True/False
-    # filter - ...
-    sorting = request.args.get('sorting')
-    reverse = request.args.get('reverse')
+    # sorting (maybe 'sort' is better) - asc/desc
+    # filter - int
 
-    return 'Yeahhh', 201
+    sorting = request.args.get('sorting')
+    filter_ = request.args.get('filter')
+
+
+    if sorting != None and not sorting.lower() in ['asc', 'desc']:
+        return 'Sorting argument should be "asc" or "desc"', 400
+    if sorting != None:
+        sorting = f'order by year {sorting}'
+
+    
+    if filter_ == None:
+        filter_ = ''
+    else:
+        try:
+            filter_ = int(filter_)
+        except:
+            return 'Type of filter should be Integer type', 400
+        
+        filter_ = f'where year = {filter_}' 
+
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(GET_ALL_STUDENTS % (filter_, sorting, ))
+            t = cursor.fetchall()
+
+            return t, 201

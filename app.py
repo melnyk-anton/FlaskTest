@@ -13,25 +13,63 @@ def home():
     return 'Hello, world!'
 
 CREATE_STUDENTS_TABLE = (
-    """CREATE TABLE IF NOT EXISTS students (
-        id serial PRIMARY KEY NOT NULL, 
-        first_name VARCHAR ( 30 ) NOT NULL,
-        last_name VARCHAR ( 30 ) NOT NULL,
-        email VARCHAR ( 30 ) UNIQUE NOT NULL,
-        unique_code VARCHAR ( 10 ) UNIQUE NOT NULL,
-        registered TIMESTAMP,
-        year INT NOT NULL
-    );"""
+    """
+    CREATE TABLE IF NOT EXISTS students (
+    id serial PRIMARY KEY NOT NULL, 
+    first_name VARCHAR ( 30 ) NOT NULL,
+    last_name VARCHAR ( 30 ) NOT NULL,
+    email VARCHAR ( 30 ) UNIQUE NOT NULL,
+    unique_code VARCHAR ( 10 ) UNIQUE NOT NULL,
+    registered TIMESTAMP,
+    year INT NOT NULL
+    );
+    """
 )
+
+INSERT_STUDENT = (
+    """
+    INSERT INTO students (
+        first_name,
+        last_name,
+        email,
+        unique_code,
+        registered,
+        year
+    )
+    VALUES (%s, %s, %s, %s, %s, %s);
+    """
+)
+
+# select empno,ename,hiredate from emp order by hiredate asc;
+# asc - ascending (reverse = False)
+# desc - descending (reverse = True)
+
+GET_ALL_STUDENTS = (
+    """
+    SELECT
+    first_name, last_name, email, unique_code, registered, year
+    from students
+    by year %s;
+    """
+) # %s - asceding or descending
 
 @app.post('/api/student')
 def create_user():
     data = request.get_json()
-    first_name = data['first_name']
-    print(first_name)
+
     with connection:
         with connection.cursor() as cursor:
             cursor.execute(CREATE_STUDENTS_TABLE)
-            # cursor.execute()
     
     return "Its ok BRO", 201
+
+@app.get('/api/student')
+def get_all_users():
+    # args:
+    # sorting - True/False
+    # reverse - True/False
+    # filter - ...
+    sorting = request.args.get('sorting')
+    reverse = request.args.get('reverse')
+
+    return 'Yeahhh', 201

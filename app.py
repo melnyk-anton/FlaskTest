@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import psycopg2
 from random import randint
-import json
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -13,6 +13,9 @@ connection = psycopg2.connect(url)
 @app.get('/')
 def home():
     return 'Hello, world!'
+
+args_to_change = ['first_name', 'last_name', 'email', 'year']
+student_table_args = ['id', 'first_name', 'last_name', 'email', 'unique_code', 'registered', 'year']
 
 CREATE_STUDENTS_TABLE = (
     """
@@ -60,6 +63,25 @@ GET_ALL_STUDENTS = (
 GET_STUDENT_BY_ID = (
     """
     SELECT * from students where id = %s;
+    """
+)
+
+CHANGE_STUDENT_BY_ID = (
+    """
+    UPDATE students
+    SET
+    first_name = %s,
+    last_name = %s,
+    email = %s,
+    year = %s
+    WHERE id=%s;
+    """
+)
+
+DELETE_STUDENT_BY_ID = (
+    """
+    DELETE FROM students
+    WHERE id = %s;
     """
 )
 
@@ -130,3 +152,57 @@ def get_user_by_id(id):
         with connection.cursor() as cursor:
             cursor.execute(GET_STUDENT_BY_ID % id)
             return jsonify(cursor.fetchone()), 201
+        
+
+@app.patch('/api/student')
+def update():
+    id = request.args.get('id')
+
+    if id == None:
+        return 'No argument id', 400
+    
+    try:
+        id = int(id)
+    except:
+        return 'id should be int', 400
+    
+    data=request.get_json()
+
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(GET_STUDENT_BY_ID % id)
+
+            student = cursor.fetchone()
+
+            if student==None:
+                return 'Student not found', 400
+            
+            student = dict(zip(student_table_args, list(student)))
+
+            for arg in data:
+                if arg in args_to_change:
+                    student[arg] = data[arg]
+            
+            cursor.execute(CHANGE_STUDENT_BY_ID, (student['first_name'], student['last_name'], student['email'], student['year'], student['id']))
+
+            return 'vso harasho', 201
+        
+@app.delete('/api/student')
+def delete_student():
+    id = request.args.get('id')
+    if id == None:
+        return 'No argument id', 400
+    
+    try:
+        id = int(id)
+    except:
+        return 'id should be int', 400
+
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(DELETE_STUDENT_BY_ID % id)
+            return 'vso harasho', 201
+        
+def parse_excel(path):
+    pass
+

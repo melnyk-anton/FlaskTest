@@ -57,6 +57,12 @@ GET_ALL_STUDENTS = (
 # first %s - where year = x
 # second %s - 'order by year' + asceding or descending
 
+GET_STUDENT_BY_ID = (
+    """
+    SELECT * from students where id = %s;
+    """
+)
+
 @app.post('/api/student')
 def create_user():
     data = request.get_json()
@@ -112,3 +118,15 @@ def get_all_users():
             t = cursor.fetchall()
 
             return t, 201
+        
+@app.get('/api/student/<id>')
+def get_user_by_id(id):
+    try:
+        id = int(id)
+    except:
+        return 'Bad ID, should be int', 400
+    
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(GET_STUDENT_BY_ID % id)
+            return jsonify(cursor.fetchone()), 201

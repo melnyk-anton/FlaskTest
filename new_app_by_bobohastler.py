@@ -2,10 +2,9 @@ from flask import Flask, render_template
 
 app = Flask(__name__)
 
-@app.route("/about")
 @app.route("/")
 def index():
-    return render_template('iceland.html')
+    return "<h1> Я НЕ БУДУ ЗАЙМАТИСЬ HTML </h1>"
 
 @app.route("/about")
 def about():

@@ -1,0 +1,44 @@
+body{
+    background-color: rgb(23, 51, 138);
+}
+
+header{
+    background-image: url(фото/bali.jpg);
+    background-size: contain;
+    text-align: center;
+    width: 680px;
+    height: 346px;
+    border: 6px solid #7922CC;
+    border-radius: 25px;
+    margin-top: 20px;
+    margin-right: 350px;
+    margin-bottom: auto;
+    background-repeat: no-repeat;
+    float: right ;
+}
+#btn1{
+    margin-top: 220px;
+    margin-right: 40px;
+}
+#btn2{
+    margin-top: 220px;
+}
+#block2{
+    background-color: rgb(207, 227, 240);
+    height: 4620px;
+    width: 1180px;
+    border: 6px solid #7922CC;
+    border-radius: 25px;
+    margin-top: 40px;
+    margin-right: 120px;
+    margin-left: auto;
+    float: right;
+}
+.block-p{
+    font-size: 22px;
+    padding-left: 5px;
+}
+.blockh1{
+    text-align: center;
+    padding-top: 10px;
+}

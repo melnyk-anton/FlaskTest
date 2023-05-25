@@ -1,14 +1,11 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, url_for, request
 
 app = Flask(__name__)
 
-@app.route("/")
-def index():
-    return "<h1> Я НЕ БУДУ ЗАЙМАТИСЬ HTML </h1>"
 
-@app.route("/about")
-def about():
-    return "ABOUT"
+@app.route("/profile/main")
+def profile():
+   return render_template("iceland.html")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+   app.run(debug=True)

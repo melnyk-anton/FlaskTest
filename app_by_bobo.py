@@ -102,6 +102,7 @@ def excel():
             flash('its bad bro, you should upload a file')
 
     return render_template("excel.html")
+
 @app.route("/api/delete", methods = ["POST", "GET"])
 def delete():
     if request.method == "POST":

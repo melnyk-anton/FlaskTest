@@ -102,7 +102,20 @@ def excel():
             flash('its bad bro, you should upload a file')
 
     return render_template("excel.html")
-
+@app.route("/api/delete", methods = ["POST", "GET"])
+def delete():
+    if request.method == "POST":
+        id = request.form["id"]
+        try:
+            id = int(id)
+        except:
+            flash("Треба, щоб id був int")
+        finally:
+            with connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(DELETE_STUDENT_BY_ID % id)
+                    flash("vso harasho")
+    return render_template("delete.html")
 @app.route("/about")
 def about():
     return render_template("about.html")

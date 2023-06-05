@@ -38,15 +38,15 @@ INSERT_STUDENT = (
 
 @app.route("/iceland.html")
 def iceland():
-   return render_template("iceland.html")
+    return render_template("iceland.html")
 
 @app.route("/main.html")
 def main():
-   return render_template("main.html")
+    return render_template("main.html")
 
 @app.route("/about.html")
 def about():
-   return render_template("about.html")
+    return render_template("about.html")
 
 def generate_unique_code():
     len_ = 10
@@ -57,22 +57,22 @@ def generate_unique_code():
 
 @app.route("/register.html", methods = ["POST", "GET"])
 def register():
-   if request.method == "POST":
-      email = request.form["email"]
-      first_name = request.form["name"]
-      last_name = request.form["surname"]
-      year = request.form["year"]
-      if len(email) >= 10:
-         flash("Дякую за реєстрацію !")
-      else:
-         flash("Помилка реєстрації")
+    if request.method == "POST":
+        email = request.form["email"]
+        first_name = request.form["name"]
+        last_name = request.form["surname"]
+        year = request.form["year"]
+        if len(email) >= 10:
+            flash("Дякую за реєстрацію !")
+        else:
+            flash("Помилка реєстрації")
 
-      with connection:
-          with connection.cursor() as cursor:
-              cursor.execute(CREATE_STUDENTS_TABLE)
-              cursor.execute(INSERT_STUDENT, (first_name, last_name, email, generate_unique_code(), year)) # without current_time
+        with connection:
+            with connection.cursor() as cursor:
+                cursor.execute(CREATE_STUDENTS_TABLE)
+                cursor.execute(INSERT_STUDENT, (first_name, last_name, email, generate_unique_code(), year)) # without current_time
     
-   return render_template("register.html", title = "Реєстрація", )
+    return render_template("register.html", title = "Реєстрація", )
 
 if __name__ == "__main__":
-   app.run(debug=True)
+    app.run(debug=True)

@@ -83,6 +83,9 @@ def iceland():
 @app.route("/main")
 def main():
     return render_template("main.html")
+@app.route("/api/exel", methods = ["POST", "GET"])
+def exel():
+    return render_template("exel.html")
 
 @app.route("/about")
 def about():
@@ -158,6 +161,7 @@ def get_user_by_id(id):
         with connection.cursor() as cursor:
             cursor.execute(GET_STUDENT_BY_ID % id)
             return jsonify(cursor.fetchone()), 201
+
 
 if __name__ == "__main__":
     app.run(debug=True)

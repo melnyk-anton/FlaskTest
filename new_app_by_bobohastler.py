@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, flash
+from flask import Flask, render_template, url_for, request, flash, jsonify
 import psycopg2
 from random import randint
 
@@ -36,15 +36,55 @@ INSERT_STUDENT = (
     """
 )
 
-@app.route("/iceland.html")
+# asc - ascending (reverse = False)
+# desc - descending (reverse = True)
+
+GET_ALL_STUDENTS = (
+    """
+    SELECT
+    first_name, last_name, email, unique_code, registered, year
+    from students
+    %s
+    %s;
+    """
+)
+# first %s - where year = x
+# second %s - 'order by year' + asceding or descending
+
+GET_STUDENT_BY_ID = (
+    """
+    SELECT * from students where id = %s;
+    """
+)
+
+CHANGE_STUDENT_BY_ID = (
+    """
+    UPDATE students
+    SET
+    first_name = %s,
+    last_name = %s,
+    email = %s,
+    year = %s
+    WHERE id=%s;
+    """
+)
+
+DELETE_STUDENT_BY_ID = (
+    """
+    DELETE FROM students
+    WHERE id = %s;
+    """
+)
+
+@app.route("/iceland")
 def iceland():
     return render_template("iceland.html")
 
-@app.route("/main.html")
+@app.route("/main")
 def main():
     return render_template("main.html")
 
-@app.route("/about.html")
+@app.route("/about")
 def about():
     return render_template("about.html")
 
@@ -55,7 +95,7 @@ def generate_unique_code():
         s += str(randint(0, 9))
     return s
 
-@app.route("/register.html", methods = ["POST", "GET"])
+@app.route("/api/register", methods = ["POST", "GET"])
 def register():
     if request.method == "POST":
         email = request.form["email"]
@@ -64,15 +104,60 @@ def register():
         year = request.form["year"]
         if len(email) >= 10:
             flash("Дякую за реєстрацію !")
+
+            with connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(CREATE_STUDENTS_TABLE)
+                    cursor.execute(INSERT_STUDENT, (first_name, last_name, email, generate_unique_code(), year)) # without current_time
         else:
             flash("Помилка реєстрації")
-
-        with connection:
-            with connection.cursor() as cursor:
-                cursor.execute(CREATE_STUDENTS_TABLE)
-                cursor.execute(INSERT_STUDENT, (first_name, last_name, email, generate_unique_code(), year)) # without current_time
     
     return render_template("register.html", title = "Реєстрація", )
+
+@app.get('/api/student')
+def get_all_users():
+    # args:
+    # sorting (maybe 'sort' is better) - asc/desc
+    # filter - int
+
+    sorting = request.args.get('sorting')
+    filter_ = request.args.get('filter')
+
+
+    if sorting != None and not sorting.lower() in ['asc', 'desc']:
+        return 'Sorting argument should be "asc" or "desc"', 400
+    if sorting != None:
+        sorting = f'order by year {sorting}'
+
+    
+    if filter_ == None:
+        filter_ = ''
+    else:
+        try:
+            filter_ = int(filter_)
+        except:
+            return 'Type of filter should be Integer type', 400
+        
+        filter_ = f'where year = {filter_}' 
+
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(GET_ALL_STUDENTS % (filter_, sorting, ))
+            t = cursor.fetchall()
+
+            return t, 201
+
+@app.get('/api/student/<id>')
+def get_user_by_id(id):
+    try:
+        id = int(id)
+    except:
+        return 'Bad ID, should be int', 400
+    
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(GET_STUDENT_BY_ID % id)
+            return jsonify(cursor.fetchone()), 201
 
 if __name__ == "__main__":
     app.run(debug=True)

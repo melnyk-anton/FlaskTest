@@ -1,6 +1,10 @@
 from flask import Flask, render_template, url_for, request, flash, jsonify
 import psycopg2
 from random import randint
+import os
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = 'static/uploads/'
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "hui"
@@ -83,9 +87,21 @@ def iceland():
 @app.route("/main")
 def main():
     return render_template("main.html")
-@app.route("/api/exel", methods = ["POST", "GET"])
-def exel():
-    return render_template("exel.html")
+
+@app.route("/api/excel", methods = ["POST", "GET"])
+def excel():
+    if request.method == "POST":
+        if 'excel' in request.files:
+            file = request.files['excel']
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(UPLOAD_FOLDER, filename))
+            #print('upload_image filename: ' + filename)
+            flash('all good bro')
+            # return render_template('upload.html', filename=filename)
+        else:
+            flash('its bad bro, you should upload a file')
+
+    return render_template("excel.html")
 
 @app.route("/about")
 def about():

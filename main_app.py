@@ -2,6 +2,8 @@ from flask import Flask, render_template, url_for, request, jsonify, flash
 import psycopg2
 from random import randint
 
+# моя бд - 'postgres://dpkjxvsf:Hgm0fnTkSKH6auFW7h5WKEYjLgpX_RJn@rogue.db.elephantsql.com/dpkjxvsf'
+# твоя бд - "postgres://ayjyxmhl:zCwVAu_nXcqxqGaa2IcZ3_sqMuX92f4a@rogue.db.elephantsql.com/ayjyxmhl"
 url = "postgres://ayjyxmhl:zCwVAu_nXcqxqGaa2IcZ3_sqMuX92f4a@rogue.db.elephantsql.com/ayjyxmhl"
 connection = psycopg2.connect(url) #підключаюсь до бд
 connection.autocommit = True #автоматично буде виконувати запроси коли потрібно
@@ -122,6 +124,10 @@ def change(id):
         with connection.cursor() as cursor:
             cursor.execute(GET_STUDENT_BY_ID, (id))
             l = cursor.fetchone()
+
+            if l == None:
+                return 'Student with this ID does not exist'
+            
             first_name = l[1]
             last_name = l[2]
             email = l[3]

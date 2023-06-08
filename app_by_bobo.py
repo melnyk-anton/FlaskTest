@@ -3,6 +3,7 @@ import psycopg2
 from random import randint
 import os
 from werkzeug.utils import secure_filename
+import pandas as pd
 
 UPLOAD_FOLDER = 'static/uploads/'
 
@@ -80,6 +81,12 @@ DELETE_STUDENT_BY_ID = (
     """
 )
 
+CHECK_EMAIL_FOR_UNIQUE = (
+    """
+    %s in (SELECT email FROM students)
+    """
+)
+
 @app.route("/iceland")
 def iceland():
     return render_template("iceland.html")
@@ -92,12 +99,44 @@ def main():
 def excel():
     if request.method == "POST":
         if 'excel' in request.files:
+            errors = []
             file = request.files['excel']
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(UPLOAD_FOLDER, filename))
-            #print('upload_image filename: ' + filename)
-            flash('all good bro')
-            # return render_template('upload.html', filename=filename)
+
+            data = pd.read_excel(file)
+
+            column_names = list(data.columns)
+
+            # Завантажувати потрібно заповнений шаблон екселя, тому перевіряємо як мінімум чи рівні назви колонок з шаблоном.
+            if column_names != ['first_name', 'last_name', 'email', 'year']:
+                flash('its bad bro, excel file should be in correct format (download example)')
+
+                return render_template('excel.html')
+            
+            for i in range(len(data.index)):
+                first_name, last_name, email, year = data.iloc[i]
+
+                if True in list(data.iloc[i].isnull()):
+                    errors.append(['all values should not be null', [first_name, last_name, email, year]])
+                    continue
+
+                try:
+                    year = int(year)
+                except:
+                    errors.append(['year should be int', [first_name, last_name, email, year]])
+                    continue
+
+                with connection:
+                    with connection.cursor() as cursor:
+                        cursor.execute(CREATE_STUDENTS_TABLE)
+                        try:
+                            cursor.execute(INSERT_STUDENT, (first_name, last_name, email, generate_unique_code(), year))
+                        except:
+                            errors.append(['email should be unique', [first_name, last_name, email, year]])
+
+            if errors == []:
+                flash('all good bro')
+            else:
+                flash(f'occured {len(errors)} errors:\n{errors}')
         else:
             flash('its bad bro, you should upload a file')
 
@@ -117,6 +156,7 @@ def delete():
                     cursor.execute(DELETE_STUDENT_BY_ID % id)
                     flash("vso harasho")
     return render_template("delete.html")
+
 @app.route("/about")
 def about():
     return render_template("about.html")
@@ -147,7 +187,7 @@ def register():
     
     return render_template("register.html", title = "Реєстрація", )
 
-@app.get('/api/student')
+@app.get('/api/student/all')
 def get_all_users():
     # args:
     # sorting (maybe 'sort' is better) - asc/desc
@@ -180,7 +220,7 @@ def get_all_users():
 
             return t, 201
 
-@app.get('/api/student/<id>')
+@app.get('/api/student/<int:id>', methods = ["POST", "GET"])
 def get_user_by_id(id):
     try:
         id = int(id)
@@ -191,6 +231,50 @@ def get_user_by_id(id):
         with connection.cursor() as cursor:
             cursor.execute(GET_STUDENT_BY_ID % id)
             return jsonify(cursor.fetchone()), 201
+        
+@app.route("/api/student/<int:id>/edit", methods = ["POST", "GET"]) #сторіна для зміни даних в таблиці
+def update(id):
+    id = str(id)
+    with connection: #ввожу дані в текстове поле
+        with connection.cursor() as cursor:
+            cursor.execute(GET_STUDENT_BY_ID, (id))
+            l = cursor.fetchone()
+
+            if l == None:
+                return 'Student with this ID does not exist'
+            
+            first_name = l[1]
+            last_name = l[2]
+            email = l[3]
+            year = l[6]
+
+    if request.method == "POST":
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        email = request.form['email']
+        year = request.form['year']
+        year = int(year)
+
+        op = True #булова змінна, яка перевіряє, чи все впорядку
+        if (len(first_name) > 30):
+            flash("Ім'я повинно бути довжиною менше 30 символів")
+            op = False
+        if (len(last_name) > 30):
+            flash("Прізвище повинно бути довжиною менше 30 символів")
+            op = False
+        if (len(email) > 30):
+            flash("Пошта повинна бути довжиною менше 30 символів")
+            op = False
+        
+        if op:
+            flash("Дані успішно змінено !")
+            with connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(CREATE_STUDENTS_TABLE)
+                    cursor.execute(CHANGE_STUDENT_BY_ID, (first_name, last_name, email, year, id))
+                    print("Дані успішно змінено")
+    
+    return render_template("change.html", first_name = first_name, last_name = last_name, email = email, year = year, action = "/api/change/"+id)
 
 
 if __name__ == "__main__":

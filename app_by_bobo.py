@@ -1,8 +1,7 @@
-from flask import Flask, render_template, url_for, request, flash, jsonify
+from flask import Flask, render_template, send_file, request, flash, jsonify
 import psycopg2
 from random import randint
 import os
-from werkzeug.utils import secure_filename
 import pandas as pd
 
 UPLOAD_FOLDER = 'static/uploads/'
@@ -10,7 +9,7 @@ UPLOAD_FOLDER = 'static/uploads/'
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "hui"
 
-url = 'postgres://ayjyxmhl:zCwVAu_nXcqxqGaa2IcZ3_sqMuX92f4a@rogue.db.elephantsql.com/ayjyxmhl'
+url = 'postgres://ayjyxmhl:zCwVAu_nXcqxqGaa2IcZ3_sqMuX92f4a@rogue.db.elephantsql.com/ayjyxmhl' #бодіна бд
 connection = psycopg2.connect(url)
 
 CREATE_STUDENTS_TABLE = (
@@ -158,7 +157,7 @@ def generate_unique_code():
         s += str(randint(0, 9))
     return s
 
-@app.get("/api/register", methods = ["POST", "GET"])
+@app.route("/api/register", methods = ["POST", "GET"])
 def register():
     if request.method == "POST":
         email = request.form["email"]
@@ -269,7 +268,6 @@ def update(id):
 @app.errorhandler(404)
 def error(error):
     return render_template("error.html")
-
 
 if __name__ == "__main__":
     app.run(debug=True)

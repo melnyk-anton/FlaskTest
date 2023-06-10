@@ -7,6 +7,8 @@
     <title>Document</title>
   </head>
   <body>
+
+
     <h1>Реєстрація</h1>
     <form action="/api/excel" method="post" class="form-contact" enctype="multipart/form-data">
       <p>
@@ -14,6 +16,11 @@
       </p>
       <p><input type="submit" value="Зареєструватись" /></p>
     </form>
+
+    <a href= "https://drive.google.com/uc?export=download&id=1nDMNprN_4Q7hlpChj8FcaP-hh2XnWpLt" download>
+      <button>Завантажити шаблон</button>
+    </a>
+
     {% for msg in get_flashed_messages() %}
     <div class="flash">{{msg}}</div>
     {% endfor %}

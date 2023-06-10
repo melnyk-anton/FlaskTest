@@ -86,8 +86,14 @@ CHECK_EMAIL_FOR_UNIQUE = (
     """
 )
 
+def generate_unique_code():
+    len_ = 10
+    s = ''
+    for i in range(len_):
+        s += str(randint(0, 9))
+    return s
 
-@app.route("/api/excel", methods = ["POST", "GET"])
+@app.route("/api/excel", methods = ["POST", "GET"]) #реєструє студентів через ексель файл
 def excel():
     if request.method == "POST":
         if 'excel' in request.files:
@@ -108,13 +114,13 @@ def excel():
                 first_name, last_name, email, year = data.iloc[i]
 
                 if True in list(data.iloc[i].isnull()):
-                    errors.append(['all values should not be null', [first_name, last_name, email, year]])
+                    errors.append(['Всі значення повинні бути заповнені', [first_name, last_name, email, year]])
                     continue
 
                 try:
                     year = int(year)
                 except:
-                    errors.append(['year should be int', [first_name, last_name, email, year]])
+                    errors.append(['Рік повинен бути числовим значенням', [first_name, last_name, email, year]])
                     continue
 
                 with connection:
@@ -123,18 +129,18 @@ def excel():
                         try:
                             cursor.execute(INSERT_STUDENT, (first_name, last_name, email, generate_unique_code(), year))
                         except:
-                            errors.append(['email should be unique', [first_name, last_name, email, year]])
+                            errors.append(['Така пошта вже була зареєстрована !', [first_name, last_name, email, year]])
 
             if errors == []:
-                flash('all good bro')
+                flash('Дані з таблиці були зареєстровані')
             else:
-                flash(f'occured {len(errors)} errors:\n{errors}')
+                flash(f'Відбулося {len(errors)} помилок:\n{errors}')
         else:
-            flash('its bad bro, you should upload a file')
+            flash('Потрібно загрузити файл')
 
     return render_template("excel.html")
 
-@app.route("/api/delete", methods = ["POST", "GET"])
+@app.route("/api/delete", methods = ["POST", "GET"]) #видаляє студента
 def delete():
     if request.method == "POST":
         id = request.form["id"]
@@ -146,23 +152,15 @@ def delete():
             with connection:
                 with connection.cursor() as cursor:
                     cursor.execute(DELETE_STUDENT_BY_ID % id)
-                    flash("vso harasho")
+                    flash("Студента видалено")
     return render_template("delete.html")
 
-
-def generate_unique_code():
-    len_ = 10
-    s = ''
-    for i in range(len_):
-        s += str(randint(0, 9))
-    return s
-
-@app.route("/api/register", methods = ["POST", "GET"])
+@app.route("/api/register", methods = ["POST", "GET"]) #вертає html сторінку для реєстрації
 def register():
     if request.method == "POST":
         email = request.form["email"]
-        first_name = request.form["name"]
-        last_name = request.form["surname"]
+        first_name = request.form["first_name"]
+        last_name = request.form["last_name"]
         year = request.form["year"]
         if len(email) >= 10:
             flash("Дякую за реєстрацію !")
@@ -176,7 +174,7 @@ def register():
     
     return render_template("register.html", title = "Реєстрація", )
 
-@app.get('/api/student/all')
+@app.get('/api/student/all') #вертає дані про вісх студентів
 def get_all_users():
     # args:
     # sorting (maybe 'sort' is better) - asc/desc
@@ -209,7 +207,7 @@ def get_all_users():
 
             return t, 201
 
-@app.route('/api/student/<int:id>', methods = ["POST", "GET"])
+@app.route('/api/student/<int:id>', methods = ["POST", "GET"]) #вертає дані про студента по id
 def get_user_by_id(id):
     try:
         id = int(id)
@@ -221,10 +219,10 @@ def get_user_by_id(id):
             cursor.execute(GET_STUDENT_BY_ID % id)
             return jsonify(cursor.fetchone()), 201
         
-@app.route("/api/student/<int:id>/edit", methods = ["POST", "GET"]) #сторінка для зміни даних в таблиці
+@app.route("/api/change/<int:id>", methods = ["POST", "GET"]) #сторінка для зміни даних в таблиці
 def update(id):
     id = str(id)
-    with connection: #ввожу дані в текстове поле
+    with connection: 
         with connection.cursor() as cursor:
             cursor.execute(GET_STUDENT_BY_ID, (id))
             l = cursor.fetchone()
@@ -265,7 +263,7 @@ def update(id):
     
     return render_template("change.html", first_name = first_name, last_name = last_name, email = email, year = year, action = "/api/change/"+id)
 
-@app.errorhandler(404)
+@app.errorhandler(404) #опрацьовує помилку 404(сторінка не знайдена)
 def error(error):
     return render_template("error.html")
 

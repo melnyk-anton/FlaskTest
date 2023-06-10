@@ -8,7 +8,7 @@
 </head>
 <body>
     <h1>Виникла помилка</h1>
-    <p>Список доступ url_адресі:</p>
+    <p>Список доступних url_адрес:</p>
     <ul>
         <li>
             /api/register (для реєстрації)
@@ -20,7 +20,13 @@
             /api/excel (для роботи з ексель файлом)
         </li>
         <li>
-            /api/student/int:id/edit (для редагування студента, int:id - його id  в бд)
+            /api/change/int:id (для редагування студента, int:id - його id  в бд)
+        </li>
+        <li>
+            /api/student/all (поверне всіх студентів, які зареєстровані, у файлі json)
+        </li>
+        <li>
+            /api/student/int:id (поверне студента у файлі json за його id в БД, int:id - його id  в бд)
         </li>
     </ul>
 </body>

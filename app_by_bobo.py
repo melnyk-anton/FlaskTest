@@ -10,7 +10,7 @@ UPLOAD_FOLDER = 'static/uploads/'
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "hui"
 
-url = 'postgres://dpkjxvsf:Hgm0fnTkSKH6auFW7h5WKEYjLgpX_RJn@rogue.db.elephantsql.com/dpkjxvsf'
+url = 'postgres://ayjyxmhl:zCwVAu_nXcqxqGaa2IcZ3_sqMuX92f4a@rogue.db.elephantsql.com/ayjyxmhl'
 connection = psycopg2.connect(url)
 
 CREATE_STUDENTS_TABLE = (
@@ -87,13 +87,6 @@ CHECK_EMAIL_FOR_UNIQUE = (
     """
 )
 
-@app.route("/iceland")
-def iceland():
-    return render_template("iceland.html")
-
-@app.route("/main")
-def main():
-    return render_template("main.html")
 
 @app.route("/api/excel", methods = ["POST", "GET"])
 def excel():
@@ -157,9 +150,6 @@ def delete():
                     flash("vso harasho")
     return render_template("delete.html")
 
-@app.route("/about")
-def about():
-    return render_template("about.html")
 
 def generate_unique_code():
     len_ = 10
@@ -168,7 +158,7 @@ def generate_unique_code():
         s += str(randint(0, 9))
     return s
 
-@app.route("/api/register", methods = ["POST", "GET"])
+@app.get("/api/register", methods = ["POST", "GET"])
 def register():
     if request.method == "POST":
         email = request.form["email"]
@@ -220,7 +210,7 @@ def get_all_users():
 
             return t, 201
 
-@app.get('/api/student/<int:id>', methods = ["POST", "GET"])
+@app.route('/api/student/<int:id>', methods = ["POST", "GET"])
 def get_user_by_id(id):
     try:
         id = int(id)
@@ -232,7 +222,7 @@ def get_user_by_id(id):
             cursor.execute(GET_STUDENT_BY_ID % id)
             return jsonify(cursor.fetchone()), 201
         
-@app.route("/api/student/<int:id>/edit", methods = ["POST", "GET"]) #сторіна для зміни даних в таблиці
+@app.route("/api/student/<int:id>/edit", methods = ["POST", "GET"]) #сторінка для зміни даних в таблиці
 def update(id):
     id = str(id)
     with connection: #ввожу дані в текстове поле
@@ -275,6 +265,10 @@ def update(id):
                     print("Дані успішно змінено")
     
     return render_template("change.html", first_name = first_name, last_name = last_name, email = email, year = year, action = "/api/change/"+id)
+
+@app.errorhandler(404)
+def error(error):
+    return render_template("error.html")
 
 
 if __name__ == "__main__":

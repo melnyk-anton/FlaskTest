@@ -117,7 +117,7 @@ def register():
 
     return render_template("register.html")
 
-@app.route("/api/change/<int:id>", methods = ["POST", "GET"]) #сторіна для зміни даних в таблиці
+@app.route("/api/change/<int:id>", methods = ["POST", "GET"]) #сторінка для зміни даних в таблиці
 def change(id):
     id = str(id)
     with connection: #ввожу дані в текстове поле

@@ -7,7 +7,6 @@ import pandas as pd
 UPLOAD_FOLDER = 'static/uploads/'
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "hui"
 
 url = 'postgres://ayjyxmhl:zCwVAu_nXcqxqGaa2IcZ3_sqMuX92f4a@rogue.db.elephantsql.com/ayjyxmhl' #бодіна бд
 connection = psycopg2.connect(url)
